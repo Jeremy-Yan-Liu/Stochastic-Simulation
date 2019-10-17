@@ -1,0 +1,311 @@
+---
+title: "Homework 4 Yan Liu"
+output: pdf_document
+---
+
+# Problem 1
+
+## (c)
+
+```{r}
+library(dplyr, quietly = T)
+library(magrittr)
+# The function below is adapted from the HW3 solution
+exp_logL <- function(X, theta)
+{
+  p1 <- theta["p1"]; p2 <- 1-p1
+  mu1 <- theta["mu1"]; mu2 <- theta["mu2"]
+  s1 <- theta["sigma1"]; s2 <- theta["sigma2"]
+  
+  N1 <- dnorm(X, mean=mu1, sd=sqrt(s1))
+  N2 <- dnorm(X, mean=mu2, sd=sqrt(s2))
+  D <- p1*N1 + p2*N2
+  
+  r1 <- p1*N1/D
+  r2 <- 1-r1
+  
+  exp_ll <- (r1*log(p1*N1) + r2*log(p2*N2)) %>% sum
+  return (exp_ll)
+}
+
+# test 
+theta <- c(mu1=70, mu2=60, sigma1=10, sigma2=15, p1=.3)
+X <- read.table("Hope Heights.txt", header=T) %>% dplyr::pull(Height)
+
+print(exp_logL(X, theta))
+```
+
+```{r}
+grad_logL <- function(X, theta)
+{
+  p1 <- theta["p1"]; p2 <- 1-p1
+  mu1 <- theta["mu1"]; mu2 <- theta["mu2"]
+  s1 <- theta["sigma1"]; s2 <- theta["sigma2"]
+  
+  N1 <- dnorm(X, mean=mu1, sd=sqrt(s1))
+  N2 <- dnorm(X, mean=mu2, sd=sqrt(s2))
+  
+  D <- p1*N1 + p2*N2
+  r1 <- p1*N1/D
+  r2 <- 1-r1
+  r1.sum <- r1 %>% sum
+  r2.sum <- r2 %>% sum
+  
+  
+  N <- length(X)
+  grad_samples <- matrix(c(mu1=r1*X/r1.sum,
+                           mu2=r2*X/r2.sum,
+                           s1 = r1*(X-mu1)^2/r1.sum,
+                           s2 = r2*(X-mu2)^2/r2.sum,
+                           p1= r1.sum/N),
+                           nrow=N,
+                           ncol=length(theta))
+  
+  grad <- grad_samples %>% colSums %>% setNames(c("mu1", "mu2", "s1", "s2", "p1"))
+  return (grad_samples %>% colSums)
+}
+
+# test
+print(grad_logL(X, theta))
+```
+
+```{r warning=FALSE, cache=T}
+norm <- function(x) sqrt(sum(x^2))
+
+expectation_maximization <- function(X, start_theta, 
+                                max_iter=100)
+{
+  theta <- start_theta
+  iter <- 1
+  
+  g <- grad_logL(X, theta)
+  while (norm(g) > 1E-3 & iter <= max_iter) {
+  
+    if (iter %% 10 == 0)
+    cat("iter=", iter, "likelihood=", exp_logL(X, theta), "\n")
+    
+    ng <- g/norm(g)
+    s <- 1
+    new_theta <- theta + s*ng
+    
+    # back up if we exceed boundaries
+    while(new_theta["p1"] < 0 | new_theta["p1"] > 1 | 
+          new_theta["sigma1"] < 0 | new_theta["sigma2"] < 0) {
+      s <- s/2
+      new_theta <- theta + s*ng
+    }
+    
+    # backtrack
+    while(exp_logL(X, new_theta) < exp_logL(X, theta)) {
+       s <- s/2
+       new_theta <- theta + s*ng
+    }
+    
+    theta <- new_theta
+    g <- grad_logL(X, theta)
+    iter <- iter + 1
+  }
+
+  return (list(theta=theta, 
+               likelihood=exp_logL(X, theta)))
+}
+
+# try a few starting points
+start_theta <- c(mu1=75, mu2=65, sigma1=5, sigma2=5, p1=.3)
+out1 <- expectation_maximization(X, start_theta, max_iter=100)
+print(out1)
+
+start_theta <- c(mu1=10, mu2=20, sigma1=20, sigma2=20, p1=.5)
+out2 <- expectation_maximization(X, start_theta, max_iter=100)
+print(out2)
+
+start_theta <- c(mu1=80, mu2=60, sigma1=5, sigma2=5, p1=.2)
+out3 <- expectation_maximization(X, start_theta, max_iter=100)
+print(out3)
+```
+
+The first starting point gives the highest likelihood and seems to split the heights roughly as we would expect (although only because we know the answer).
+
+## (d)
+Let's choose the mixture based on which of $P(z_i = 1 \ | \ \hat{X}_i, \theta)$ and $P(z_i = 2 \ | \ \hat{X}_i, \theta)$ is bigger.
+
+```{r}
+# Get the theta that was best from b.i
+theta <- out1$theta
+theta
+Gender <- read.table("Hope Heights.txt", header=T) %>% dplyr::pull(Gender)
+
+classify_gender <- function(X, theta)
+{
+  p1 <- theta["p1"]; p2 <- 1-p1
+  mu1 <- theta["mu1"]; mu2 <- theta["mu2"]
+  s1 <- theta["sigma1"]; s2 <- theta["sigma2"]
+  
+  N1 <- dnorm(X, mean=mu1, sd=sqrt(s1))
+  N2 <- dnorm(X, mean=mu2, sd=sqrt(s2))
+  
+  D <- p1*N1 + p2*N2
+  
+  r1 <- p1*N1/D
+  r2 <- 1-r1
+  
+  # The first mixture has higher mu, so associate that with male gender
+  guess <- ifelse(r1*log(p1*N1) > r2*log(p2*N2), 1, 2)
+  
+  return (guess)
+}
+
+guess_Gender <- classify_gender(X, theta)
+correct <- sum(Gender==guess_Gender)/length(Gender)
+print(correct)
+```
+
+We get roughly $85\%$ right, which is better than in Homework 3.
+Medium heights is harder to classify or guess that extream heights.
+
+```{r}
+data.frame(height=X, guess=guess_Gender, true=Gender) %>% dplyr::arrange(height) -> result
+result %>% head(5)
+result[45:55,]
+result %>% tail(5)
+```
+
+# Problem 2
+
+```{r}
+X_b <- read.csv("noisy_bits.csv")
+image(t(X_b))
+```
+```{r}
+exp_b_logL <- function(X_b, theta_b)
+{
+  p1 <- theta_b["p1",]; p2 <- 1-p1
+  mu1 <- theta_b["mu1",]; mu2 <- theta_b["mu2",]
+
+  # mu1=.2;
+  # mu2=.2; p1=.45;
+  # p2 <- 1-p1
+  
+  R1 <- p1*apply(mu1^X_b*(1-mu1)^(1-X_b), 1, prod) 
+  R2 <- p2*apply(mu2^X_b*(1-mu2)^(1-X_b), 1, prod) 
+  r1 <- R1 / (R1+R2) 
+  r2 <- 1-r1
+  
+  exp_b_ll <- (r1*log(R1) + r2*log(R2)) %>% sum
+  return (exp_b_ll)
+}
+
+# test 
+theta_b<- matrix(rep(c(.4, .2, p1=.45), each =10), nrow =3, byrow = T) %>% 
+            set_rownames(c("mu1", "mu2", "p1"))
+theta_b
+#theta_b
+print(exp_b_logL(X_b, theta_b))
+```
+
+```{r}
+grad_b_logL <- function(X_b, theta_b)
+{
+  p1 <- theta_b["p1",]; p2 <- 1-p1
+  mu1 <- theta_b["mu1",]; mu2 <- theta_b["mu2",]
+  
+  R1 <- p1*apply(mu1^X_b*(1-mu1)^(1-X_b), 1, prod) 
+  R2 <- p2*apply(mu2^X_b*(1-mu2)^(1-X_b), 1, prod) 
+  r1 <- as.vector(R1 / (R1+R2))
+  r2 <- 1-r1
+  
+  r1.sum <- r1 %>% sum
+  r2.sum <- r2 %>% sum
+  
+  
+  N <- dim(X_b)[1]
+  dimension <- dim(X_b)[2]
+  grad_samples <- matrix(c(mu1=(t(r1) %*% as.matrix(X_b)),
+                           mu2=(t(r2) %*% as.matrix(X_b)),
+                           p1= rep(r1.sum/N, dimension)),
+                           byrow = T,
+                           ncol=dimension) %>% set_rownames(c("mu1", "mu2", "p1"))
+  return (grad_samples)
+}
+
+# test
+print(grad_b_logL(X_b, theta_b))
+
+```
+
+```{r warning=FALSE}
+expectation_maximization_b <- function(X_b, start_theta_b, 
+                                max_iter=200)
+{
+  theta_b <- start_theta_b
+  iter <- 1
+  s <- 1
+  gradient <- grad_b_logL(X_b, theta_b)
+  
+  while (iter <= max_iter) {
+    
+    # if (iter %% 10 == 0)
+    #    cat("iter=", iter, "likelihood=", exp_b_logL(X_b, theta_b), "\n")
+    
+    ng <- gradient/norm(gradient)
+
+    s <- 1
+    new_theta_b <- theta_b + s*ng
+
+    # back up if we exceed boundaries
+    while(any(new_theta_b["p1",]) < 0 | any(new_theta_b["p1",]) > 1) | any(new_theta_b["mu1",]) < 0 | any(new_theta_b["mu1",]) > 1) | any(new_theta_b["mu2",]) < 0 | any(new_theta_b["mu2",]) > 1){
+      s <- s/2
+      new_theta_b <- theta_b + s*ng
+    }
+
+     # backtrack
+
+    while((exp_b_logL(X_b, new_theta_b) < exp_b_logL(X_b, theta_b))) {
+       s <- s/2
+       new_theta_b <- theta_b + s*ng
+    }
+    
+    theta_b <- new_theta_b
+    gradient <- grad_b_logL(X_b, theta_b)
+    iter <- iter + 1
+    
+    return (list(theta=theta_b,
+             likelihood=exp_b_logL(X_b, theta_b)))
+  }
+}
+
+
+#start_theta <- c(mu1=.4, mu2=.3,  p1=.4)
+start_theta_b<- matrix(rep(c(.4, .2, p1=.2), each =10), nrow =3, byrow = T) %>% 
+                  set_rownames(c("mu1", "mu2", "p1"))
+final_out <- expectation_maximization_b(X_b, start_theta_b, max_iter=200)
+
+```
+
+```{r}
+# Get the theta that was best from b.i
+theta <- final_out$theta
+
+classify_X <- function(X, theta)
+{
+  p1 <- theta["p1",]; 
+  p2 <- 1-p1;
+  mu1 <- theta["mu1",]; 
+  mu2 <- theta["mu2",]
+  
+  R1 <- p1*apply(mu1^X_b*(1-mu1)^(1-X_b), 1, prod) 
+  R2 <- p2*apply(mu2^X_b*(1-mu2)^(1-X_b), 1, prod) 
+  r1 <- R1 / (R1+R2) 
+  r2 <- 1-r1
+  
+  guess <- ifelse((r1*log(R1) > r2*log(R2)), 0, 1)
+  
+  return (guess)
+}
+
+guess_X <- classify_X(X_b, theta)
+X_b_label <- ifelse(apply(X_b, 1, sum)>5,1,0)
+print(sum(guess_X == X_b_label)/500)
+```
+
+The result is fairly good.

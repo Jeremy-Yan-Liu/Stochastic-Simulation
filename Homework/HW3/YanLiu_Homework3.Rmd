@@ -1,0 +1,594 @@
+---
+title: "HW3"
+author: "Yan Liu"
+date: "9/15/2019"
+output:
+  pdf_document: default
+---
+
+## 1.
+
+$$X = \bigg\{
+\begin{array}{cc}
+\mathcal{N}(\mu_1, \sigma_1^2) & \text{ with probability } p_1 \\
+\mathcal{N}(\mu_2, \sigma_2^2) & \text{ with probability } 1 - p_1 
+\end{array}$$
+
+### a) 
+The data file specifies gender, but pretend you don't have this information. Write down the log-likelihood function $\ell(\theta)$ and $\nabla \ell(\theta)$ given the height samples, i.e. in terms of $\hat{X}_i$. Write R (or Python) functions that calculate $\ell(\theta)$ and $\nabla \ell(\theta)$
+
+### Solution
+$$
+\begin{aligned}
+\theta &= (\mu_1,\mu_2, \sigma_1, \sigma_2, p1)\\
+P(\hat X|\theta) &= P(\hat X_1|\theta)\cdot P(\hat X_2|\theta)\cdot ...\cdot P(\hat X_n|\theta)\\
+&= \prod_{i=1}^n P(\hat X_i|\theta)\\
+\Longrightarrow \ell (\theta) &= log(P(\hat X|\theta)) \\
+&= \sum_{i=1}^n log(P(\hat X_i|\theta))\\
+&= \sum_{i=1}^n log(p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}+ (1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2})\\\\
+\theta_{MLE} &= argmax_{\theta}\ \ell (\theta)\\\\
+\nabla \ell(\theta) = \left(
+\begin{array}{c}
+\frac{\partial \ell(\theta)}{\partial \mu_1}\\
+\frac{\partial \ell(\theta)}{\partial \mu_2}\\
+\frac{\partial \ell(\theta)}{\partial \sigma_1}\\
+\frac{\partial \ell(\theta)}{\partial \sigma_2}\\
+\frac{\partial \ell(\theta)}{\partial p_1}\\
+\end{array}
+\right)
+\end{aligned}\\
+$$
+
+where 
+$$
+\begin{aligned}
+\frac{\partial \ell(\theta)}{\partial \mu_1} &= \sum_{i=1}^n\frac{p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}\cdot \frac{x_i-\mu_1}{\sigma_1^2}}{p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}+ (1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2})}\\\\
+\frac{\partial \ell(\theta)}{\partial \mu_2} &= \sum_{i=1}^n\frac{(1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2}\cdot \frac{x_i-\mu_2}{\sigma_2^2}}{p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}+ (1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2}}\\\\
+\frac{\partial \ell(\theta)}{\partial \sigma_1} &= \sum_{i=1}^n\frac{\frac{p_1}{\sqrt{2\pi}}\cdot (-2\sigma_1^{-3})\cdot e^{-(x_i-\mu_1)^2/2\sigma_1^2}\cdot(-\frac{(x_i-\mu_1)^2}{2})\cdot (-2\sigma_1^{-3})}{p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}+ (1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2}}\\\\
+&= \sum_{i=1}^n\frac{\frac{-2p_1(x_i-\mu_1)^2}{\sqrt{2\pi}}\cdot \frac{e^{-(x_i-\mu_1)^2/2\sigma_1^2}}{\sigma_1^{6}}}{p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}+ (1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2}}\\\\
+\frac{\partial \ell(\theta)}{\partial \sigma_2} &= \sum_{i=1}^n\frac{\frac{1-p_1}{\sqrt{2\pi}}\cdot (-2\sigma_2^{-3})\cdot e^{-(x_i-\mu_2)^2/2\sigma_2^2}\cdot(-\frac{(x_i-\mu_2)^2}{2})\cdot (-2\sigma_2^{-3})}{p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}+ (1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2}}\\\\
+&= \sum_{i=1}^n\frac{\frac{-2(1-p_1)(x_i-\mu_2)^2}{\sqrt{2\pi}}\cdot \frac{e^{-(x_i-\mu_2)^2/2\sigma_2^2}}{\sigma_2^{6}}}{p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}+ (1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2}}\\\\
+\frac{\partial \ell(\theta)}{\partial p_1} &=\sum_{i=1}^n\frac{ \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2} - \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2})}{p_1\cdot \frac{1}{\sqrt{2\pi}\sigma_1^2}e^{-(x_i-\mu_1)^2/2\sigma_1^2}+ (1-p_1)\cdot \frac{1}{\sqrt{2\pi}\sigma_2^2}e^{-(x_i-\mu_2)^2/2\sigma_2^2}}
+\end{aligned}
+$$
+
+
+### b)
+Find the MLE for $\theta$ by
+
+### 1) 
+Applying a steepest ascent iteration $\theta^{(i+1)} = \theta^{(i)} + s \nabla \ell(\theta)$.   
+
+```{r}
+data <- readLines("Hope Heights.txt")
+n <- length(data) - 7 # skip the first 7 comment rows 
+gender <- numeric(n)
+height <- numeric(n)
+for (i in 1:n){
+  gender[i]<- as.numeric(strsplit(data[7+i], " ")[[1]][1])
+  height[i] <- as.numeric(strsplit(data[7+i], " ")[[1]][3])
+}
+mu.0 <- mean(height)
+sigma.0 <- sd(height)
+```
+
+
+```{r}
+likelihood <- function(mu.1,mu.2,sigma.1,sigma.2, p1, x){
+  return (sum(p1/(sqrt(2*pi)*sigma.1^2)*exp(-(x-mu.1)^2/2*sigma.1^2) 
+          + (1-p1)/(sqrt(2*pi)*sigma.2^2)*exp(-(x-mu.2)^2/2*sigma.2^2)))
+}
+loglikelihood <- function(mu.1,mu.2,sigma.1,sigma.2, p1, x){
+  return (sum(log(p1/(sqrt(2*pi)*sigma.1^2)*exp(-(x-mu.1)^2/2*sigma.1^2) 
+          + (1-p1)/(sqrt(2*pi)*sigma.2^2)*exp(-(x-mu.2)^2/2*sigma.2^2))))
+}
+gradient.mu.1 <- function(mu.1,mu.2,sigma.1,sigma.2, p1, x){
+  return(sum((p1/sqrt(2*pi)*sigma.1^2*exp(-(x-mu.1)^2/(2*sigma.1^2))*((x-mu.1)/sigma.1^2))
+             /likelihood(mu.1,mu.2, sigma.1, sigma.2,p1,x)))
+}
+gradient.mu.2 <- function(mu.1,mu.2,sigma.1,sigma.2, p1, x){
+  return(sum(((1-p1)/sqrt(2*pi)*sigma.2^2*exp(-(x-mu.2)^2/(2*sigma.2^2))*((x-mu.2)/sigma.2^2))
+             /likelihood(mu.1,mu.2,sigma.1, sigma.2,p1,x)))
+}
+gradient.sigma.1 <- function(mu.1,mu.2,sigma.1,sigma.2, p1, x){
+  return(sum((-2*p1*(x-mu.1)^2*exp(-(x-mu.1)^2/2*sigma.1^2)/sqrt(2*pi)/sigma.1^6)
+             /likelihood(mu.1,mu.2, sigma.1, sigma.2,p1,x)))
+}
+gradient.sigma.2 <- function(mu.1,mu.2,sigma.1,sigma.2, p1, x){
+  return(sum((-2*(1-p1)*(x-mu.2)^2*exp(-(x-mu.2)^2/2*sigma.2^2)/sqrt(2*pi)/sigma.2^6)
+             /likelihood(mu.1,mu.2, sigma.1, sigma.2,p1,x)))
+}
+gradient.p1 <- function(mu.1,mu.2,sigma.1,sigma.2, p1, x){
+  return(sum((exp(-(x-mu.1)^2/2*sigma.1^2)/sqrt(2*pi)/sigma.1^2
+          -exp(-(x-mu.2)^2/2*sigma.2^2)/sqrt(2*pi)/sigma.2^2)
+          /likelihood(mu.1,mu.2, sigma.1, sigma.2,p1,x)))
+}
+```
+
+```{r}
+# Take a look at sample mean and standard deviation 
+# to use as reference for parameter initialization
+library(dplyr)
+library(magrittr)
+df <- data.frame("gender" = gender, "height" = height)
+df %>% group_by(gender) %>% summarise(mean = mean(height), sd = sd(height))
+```
+
+```{r}
+steepest_ascent <-  function(mu.1.0, mu.2.0, sigma.1.0, sigma.2.0, p1.0, 
+                             step.size, thresh, x){
+  # Initialization
+  mu.1 <- mu.1.0
+  mu.2 <- mu.2.0
+  sigma.1 <- sigma.1.0
+  sigma.2 <- sigma.2.0
+  p1 <- p1.0
+  s <- step.size
+  l.old <- loglikelihood(mu.1, mu.2,sigma.1,sigma.2, p1, x)
+  iter.counter <- 0
+  # Update
+  repeat {
+    mu.1 <- mu.1 + s*gradient.mu.1(mu.1,mu.2,sigma.1,sigma.2, p1, x)
+    mu.2 <- mu.2 + s*gradient.mu.2(mu.1,mu.2,sigma.1,sigma.2, p1, x)
+    sigma.1 <- sigma.1 + s*gradient.sigma.1(mu.1,mu.2,sigma.1,sigma.2, p1, x)
+    sigma.2 <- sigma.2 + s*gradient.sigma.2(mu.1,mu.2,sigma.1,sigma.2, p1, x)
+    p1 <- p1 + s* gradient.p1(mu.1,mu.2,sigma.1,sigma.2, p1, x)
+    l.new <- loglikelihood(mu.1, mu.2,sigma.1,sigma.2, p1, x)
+    iter.counter <- iter.counter + 1
+    if (iter.counter %% 1000 == 0){
+      cat ( iter.counter, " Iterations  ")
+      cat(" Updated likelihood", l.new, "\n")
+    } #cat("l.old", l.old, "\n")
+    if (l.new-l.old < thresh ){
+      break
+    }
+    else{
+      l.old <- l.new
+    }
+  }
+  cat("Parameters: \n")
+  cat("mu.1 = ", mu.1, "\n")
+  cat("mu.2 = ", mu.2, "\n")
+  cat("sigma.1 = ", sigma.1, " \n")
+  cat("sigma.2 = ", sigma.2, " \n")
+  cat("p1 = ", p1, "\n")
+  return(c(mu.1, mu.2, sigma.1, sigma.2, p1))
+}
+
+```
+
+```{r}
+parameters <- steepest_ascent(65, 67, 2, 2, .4, step.size = .0001, thresh = .000001, x = height)
+```
+
+### 2) 
+Using $nlm$ or an equivalent in Python.
+
+```{r}
+fn <- function (theta){
+  # theta: a parameter vector contains (mu.1, mu.2, sigma.1, sigma.2, p1)
+  return (-sum(log(theta[5]/(sqrt(2*pi)*theta[3]^2)*exp(-(height-theta[1])^2/2*theta[3]^2) 
+          + (1-theta[5])/(sqrt(2*pi)*theta[4]^2)*exp(-(height-theta[2])^2/2*theta[4]^2))))
+}
+nlm(fn, c(65, 67, 2, 2, .4), print.level = 2, hessian = TRUE)
+```
+
+### c)
+Given your MLE in (b), use the distribution of $X$ to predict whether a given sample is taken from a man or woman.   Intuitively, the two normal distributions of $X$ correspond to the male and female height distributions.  Given a sample, $\hat{X}$, decide which normal the sample is most likely to come from and assign the gender accordingly.  Determine what percentage of individuals are classified correctly.
+
+```{r}
+mu.1 <- parameters[1]
+mu.2 <- parameters[2]
+sigma.1 <- parameters[3]
+sigma.2 <- parameters[4]
+p1 <- parameters[5]
+x <- height
+z.score.f <- abs((x-mu.1)/sigma.1)
+z.score.m <- abs((x- mu.2)/sigma.2)
+```
+
+```{r}
+gender.pred <- ifelse(z.score.f < z.score.m, 1, 2)
+cat("Confusion Matrix:\n")
+confusion.matrix <-  as.matrix(table(gender, gender.pred))
+confusion.matrix
+cat("\nThe percentage of individuals that are classified correctly is: ",
+    sum(diag(confusion.matrix))/sum(confusion.matrix)*100, "%")
+```
+
+## 2.
+### a) 
+Let $Q$ be an $n \times n$ orthonormal matrix.  Show that $Q^{-1} = Q^T$
+
+### Solution
+We first show that $QQ^{T} = Q^{T}Q = I$
+Let $v = v_1,v_2, ..., v_n$ be column vectors of $Q$, by definition, we have
+$$
+v_i^Tv_j = \left\{\begin{array}{rcl}
+        1 ,&\mbox {if}\ i = j \\
+        0, & \mbox{if}\ i \neq j
+        \end{array}\right.\\
+$$
+
+When we multiply $Q^{T}$ with $Q$, let $q_{ij}$ indicate the $i_{th}$ row, $j_{th}$ column of the result. When $i\neq j$, $q_{ij}$ is the dot product of the $i_{th}$ row of $Q^{T}$ (or the $i_{th}$ column of $Q$) with the $j_th$ row of $Q$, which gives 0, since $v_1,v_2, ..., v_n$ are orthogonal;when $i = j$, $q_{ij}$is the dot product of the $i_{th}$ row of $Q^{T}$ (or the $i_{th}$ column of $Q$) with the $i_{th}$ row of $Q$, which gives 1, since $v_1,v_2, ..., v_n$ are normal.
+Thus, $Q^{T}Q = I$. Symmetrically, we also have $QQ^{T} = I$.
+
+Since the columns vectors $v$ of $Q$ are orthonormal vectors, $v_i, v_j$ are linearly independent, thus $Q$ is invertible. In other words, $Q^{-1}$ exists.
+
+Use the transpose formula above, we have 
+$$
+Q^{T}Q = I \Longrightarrow Q^{T}QQ^{-1} = IQ^{-1} \Longrightarrow Q^{T}QQ^{-1} = Q^{-1}
+\Longrightarrow Q^{T}(QQ^{-1}) = Q^{-1} \Longrightarrow Q^{T} = Q^{-1}
+$$
+
+### b) 
+Show that $R$ rotates vectors by an angle $\theta$ and that $F$ reflects vectors about the $x$-axis.
+
+### Solution 
+Let $A$ be a $2\times 1$ matrix with length $L$, let the angle between vector $A$ and the $x$-axis be $\alpha$, then we can write $A$ as 
+
+$$
+A = \left(
+\begin{array}{cc}
+Lcos(\alpha)\\
+Lsin(\alpha)
+\end{array}
+\right)
+$$
+
+Thus,
+$$
+RA = \left(
+\begin{array}{cc}
+\cos(\theta) & -\sin(\theta) \\
+\sin(\theta) & \cos(\theta)
+\end{array}
+\right) \cdot \left(
+\begin{array}{cc}
+Lcos(\alpha)\\
+Lsin(\alpha)
+\end{array}
+\right)\\
+= \left(
+\begin{array}{cc}
+L(\cos(\theta)cos(\alpha) -\sin(\theta)\sin(\alpha)) \\
+L(\sin(\theta)cos(\alpha) + \cos(\theta)\sin(\alpha))
+\end{array}
+\right) 
+$$
+
+Use angle addition formulas, we have 
+$$
+\begin{aligned}
+\cos(\theta)cos(\alpha) -\sin(\theta)\sin(\alpha) &= cos(\theta + \alpha)\\
+\sin(\theta)cos(\alpha) + \cos(\theta)\sin(\alpha) &= sin(\theta + \alpha)
+\end{aligned}
+$$
+
+Thus, 
+$$
+RA = \left(
+\begin{array}{cc}
+L(\cos(\theta + \alpha) \\
+L(\sin(\theta + \alpha)
+\end{array}
+\right) 
+$$
+
+Therefore, geometrically, left multiply by $R$ is equivalent to rotate $A$ by an angle $\theta$.
+
+As for $FA$, we have:
+$$
+FA = \left(
+\begin{array}{cc}
+1 &0  \\
+0 & -1
+\end{array}
+\right)
+\cdot 
+\left(
+\begin{array}{cc}
+Lcos(\alpha)\\
+Lsin(\alpha)
+\end{array}
+\right) = \left(
+\begin{array}{cc}
+Lcos(\alpha)\\
+-Lsin(\alpha)
+\end{array}
+\right)\\
+$$
+
+So after left multiply by $F$, $x$-coordinate $Lcos(\alpha)$ remains the same, while the $y$-coordinate $(-Lsin(\alpha))$ becomes the negative of the original value of $y$.
+In other words, left multiply by $F$ reflects vectors about the $x$-axis.
+
+
+### c) 
+Show that you can form any $2 \times 2$ orthonormal matrix using $R$ and $RF$.    
+
+### Solution
+$$
+RF = \left(
+\begin{array}{cc}
+\cos(\theta) & -\sin(\theta) \\
+\sin(\theta) & \cos(\theta)
+\end{array}
+\right) \cdot \left(
+\begin{array}{cc}
+1 &0  \\
+0 & -1
+\end{array}
+\right)\\
+= \left(
+\begin{array}{cc}
+cos(\theta) & -\sin(\theta) \\
+sin(\theta) & -\cos(\theta)
+\end{array}
+\right) 
+$$
+
+Let $A$ denotes an orthonormal matrix with entry $a,b,c,d$ as below.
+$$
+A = \left(
+\begin{array}{cc}
+a &c  \\
+b &d
+\end{array}
+\right)
+$$
+
+where $a,b,c,d$ satisfies the following equations by the orthonormal property:
+$$
+\left\{\begin{array}{rcl}
+        a^2 + b^2 = 1\\
+        c^2 + d^2 = 1 \\
+        ac+bd = 0 
+        \end{array}\right.\\
+$$
+
+Imagine a unit circle, we may find that there exists two angles $\alpha, \beta \in [0,2\pi)$ such that 
+$$
+a=cos(\alpha),\ b= sin(\alpha),\ c=sin(\beta),\ d = cos(\beta)
+$$
+
+The third equation therefore can be written as (using the angle addition formulas)
+$$
+cos(\alpha) sin(\beta) + sin(\alpha)cos(\beta) = 0 \Longrightarrow sin(\alpha+\beta) = 0
+$$
+
+By the property of $sin()$ function, we have $\alpha+\beta = k\pi, k\in N$. Due to the periodicity of the $sin()$ function, we only need to consider two situations $k= 0$ or $k=1$.
+
+When $k = 0$, we have $\alpha = -\beta$, 
+$$
+\begin{aligned}
+a&=cos(\alpha),\\ 
+b&= sin(\alpha),\\ 
+c&=sin(\beta) = sin(-\alpha) = -sin(\alpha),\\
+d&= cos(\beta) = cos(-\alpha) = cos(\alpha).
+\end{aligned}
+$$
+
+$A$ can be written as $R$.
+
+When $k = 1$, we have $\alpha + \beta = \pi$, which gives
+$$
+\begin{aligned}
+a&=cos(\alpha),\\ 
+b&= sin(\alpha),\\ 
+c&=sin(\beta) = sin(\pi-\alpha) = sin(\alpha),\\
+d&= cos(\beta) = cos(\pi-\alpha) = -cos(\alpha).
+\end{aligned}
+$$
+
+$A$ can be written as $RF$.
+
+### 3. 
+Let $X \sim \mathcal(\mu, \Sigma)$ where $\mu \in \mathbb{R}^n$ and $\Sigma$ is an $n \times n$ covariance matrix.  
+
+### a) 
+Let $M$ be an $n \times n$ invertible matrix.  Show that $MX \sim \mathcal(M\mu, M \Sigma M^T)$.
+
+### Solution
+We use the characteristic function of multinormal distribution to prove the theorem.
+By definition of the multinormal distribution using characteristic function (see reference here: https://www.math.kth.se/matstat/gru/sf2940/sf2940lectVI3.pdf), since
+$X \sim \mathcal(\mu, \Sigma)$, the corresponding characteristic function is 
+$$
+\phi_X(t) = exp(it^{T}\mu-\frac{1}{2}t^{T}\Sigma t)
+$$
+
+where $i$ is the imaginary unit and $t$ is a $n\times 1$ row vector.
+
+Assume $m_i$ is the $i_{th}$ row of the $n\times n$ invertible matrix $M$. 
+We then prove that $m_iX \sim N(m_i\mu, m_i\Sigma m_i^{T})$.
+$$
+\begin{aligned}
+\phi_{m_{i}X}(t)&= E[exp(it(m_{i}X))]\\
+&= E[exp(i(t^Tm_i)X]\\
+&= E[exp(i(m_i^Tt)^TX)]\\
+&= E[exp(i(m_i^Tt)^TX)]\\
+\end{aligned}
+$$
+Let $t^* = m_i^Tt$, we then have 
+$$
+\begin{aligned}
+\phi_{m_{i}X}(t)
+&= E[exp(i(m_i^Tt)^TX)] \\
+&= E[exp(i(t^*)^TX)]\\
+&= exp(i(t^*)^{T}\mu-\frac{1}{2}(t^*)^{T}\Sigma (t^*)) \\
+&= exp(i(m_i^Tt)^{T}\mu-\frac{1}{2}(m_i^Tt)^{T}\Sigma (m_i^Tt)) \\
+&= exp(i(t^{T}m_i\mu-\frac{1}{2}t^{T}m_i\Sigma (m_i^Tt)) \\
+&= exp(i(t^{T}(m_i\mu))-\frac{1}{2}t^{T}(m_i\Sigma m_i^T)t) 
+\end{aligned}
+$$
+
+Thus, we have $m_iX \sim N(m_i\mu, m_i\Sigma m_i^{T})$.
+Since 
+$$
+M = \left(
+\begin{array}{cc}
+m_1\\
+m_2\\
+.\\
+.\\
+.\\
+m_n
+\end{array}
+\right) 
+$$
+
+$$
+MX = \left(
+\begin{array}{cc}
+m_1\\
+m_2\\
+.\\
+.\\
+.\\
+m_n
+\end{array}
+\right) X = \left(
+\begin{array}{cc}
+m_1X\\
+m_2X\\
+.\\
+.\\
+.\\
+m_nX
+\end{array}
+\right)
+$$
+
+where$\ m_iX \sim N(m_i\mu, m_i\Sigma m_i^{T}),\ i = 1,2, ..., n$. This is equivalent to $MX \sim \mathcal(M\mu, M \Sigma M^T)$
+
+### b) 
+Show that if $\Sigma$ is a diagonal matrix then the coordinates of $X$ are independent normals.
+
+### Solution:
+Since $\Sigma$ is a diagonal matrix, it follows that there exists eigenvectors $q^{(1)},q^{(2)}, ... , q^{(n)}$ and associated eigenvalues $\lambda_1,\lambda_2,...,\lambda_n$ such that 
+$q^{(i)}\cdot q^{(j)} = 0\ \forall\ i\neq j$ and $||q^{(i)}|| = 1$.
+
+Thus, $\Sigma = QDQ^T$ where 
+$$
+D = \left(
+\begin{array}{cccc}
+\lambda_1 & 0 & ... & 0\\
+0 & \lambda_2 & ... & 0\\
+. & . & . & .\\
+. & . & . & .\\
+0 &...& 0 & \lambda_n
+\end{array}
+\right)\\\\
+Q = (q^{(1)},q^{(2)}, ... , q^{(n)})
+$$
+
+By the theorem in a), we have $MX \sim \mathcal(M\mu, M \Sigma M^T)$.
+Since $X\sim N(\mu, \Sigma) \Longleftrightarrow X \sim \mu + N(0, \Sigma)$, we may only consider the situation where $X\sim N(0, \Sigma)$.
+Left multiply $X$ by $Q^T$, we have
+$$
+\begin{aligned}
+Q^TX&\sim (0, Q^T \Sigma Q) \\
+&= (0,Q^T QDQ^T Q )\\
+&= (0,(Q^T Q)D(Q^T Q)\\
+&= (0,IDI)\\
+&= (0,D)\\
+\end{aligned}
+$$
+
+Let $Z = Q^TX \sim (0,D)$, then $Z_i \sim N(0, D_{ii})$.
+Thus $f(z) = \frac{1}{\sqrt{(2\pi)^{n}}\det D} e^{-(z^TD^{-1}z)/2}$.      
+Since $D$ is diagonal, we have $\det D = D_{11}\cdot D_{22}\cdot  ... \cdot D_{nn}$.
+$$
+Z^TD^{-1}Z = (Z_1, Z_2, ..., Z_n)\left(
+\begin{array}{cccc}
+\frac{1}{D_{11}} & 0 & ... & 0\\
+0 & \frac{1}{D_{22}}  & ... & 0\\
+.&.&.&.\\
+.&.&.&.\\
+0 & ...&0&\frac{1}{D_{nn}} 
+\end{array}
+\right)\left(
+\begin{array}{cc}
+Z_1\\
+Z_2\\
+.\\
+.\\
+Z_n 
+\end{array}
+\right) = \sum_{i=1}^n\frac{Z_i^2}{D_{ii}}
+$$
+
+Plug in the two expressions above to $f(z)$, we have
+$$
+\begin{aligned}
+f(z) &= \frac{1}{\sqrt{(2\pi)^{n}}\det D} e^{-(z^TD^{-1}z)/2}\\
+&= \frac{1}{\sqrt{(2\pi)^{n}(D_{11}\cdot D_{22}\cdot  ... \cdot D_{nn})}}e^{-\frac{1}{2}\sum_{i=1}^n\frac{Z_i^2}{D_{ii}}}\\
+&= \prod_{i=1}^n \frac{1}{\sqrt{(2\pi)}D_{ii}}e^{-\frac{Z_i^2}{2D_{ii}}}\\
+&= f_{Z_1}(z_1)\cdot f_{Z_2}(z_2)\cdot ...\cdot f_{Z_n}(z_n)
+\end{aligned}
+$$
+
+Thus, $Z_1, Z_2, ..., Z_n$ are independent.
+
+### 3)
+Write a function \textbf{MultiNorm($\mu$, $\Sigma$)} that samples from a multivariate normal with mean $\mu$ and covariance $\Sigma$.  Your function can use $\textbf{rnorm}$, the univariate normal sampler in R, and the function \textbf{eigen} (or their equivalent in Python).
+
+### Solution: 
+Based on the previous conclusion, we know that given $X\sim N(\mu, \Sigma)$, we can rewrite $\Sigma$ through the spectral decompostion, i.e., $\Sigma = QDQ^T$, where $Q$ is the eigen vector, $D$ is a diagonal matrix with eigen values on the diagonal. Since $X\sim N(\mu, \Sigma) \Longleftrightarrow X\sim \mu + N(0, \Sigma)$. Thus, assume $X \sim N(0, \Sigma)$, then 
+
+$$
+Q^TX \sim N(0, Q^T(QDQ^T)Q) \Longrightarrow Q^TX \sim N(0, D)
+$$
+
+Let $Z = Q^TX \sim N(0, D)$, we can first sample from $N(0,D)$ to get $Z$, then transform back to $X \sim (0, \Sigma)$ by left multiply $Q$ as $QZ = QQ^TX = X$. After that, we can add back $mu$ to recover the original X. 
+
+```{r}
+# $Id: mvnorm.R 332 2016-10-27 09:17:12Z thothorn $
+# Code for checking edge cases is adapted from 
+# https://rdrr.io/cran/mvtnorm/src/R/mvnorm.R
+
+MultiNorm <- function(N, mu, sigma){
+  if (!isSymmetric(sigma, tol = sqrt(.Machine$double.eps),
+                     check.attributes = FALSE)) {
+        stop("sigma must be a symmetric matrix")
+    }
+    if (length(mu) != nrow(sigma)){
+        stop("mean and sigma have non-conforming size")
+    }
+    # Sigma = Q %*% D  %*% t(Q)
+    ev <- eigen(sigma, symmetric = TRUE)
+    # Check Positive Semidefinite 
+    # Compare with the machine's smallest positive floating-point number 
+    if (!all(ev$values >= -sqrt(.Machine$double.eps) * abs(ev$values[1]))){
+        warning("sigma is numerically not positive semidefinite")
+    }
+    Q <- ev$vectors
+    D <- diag(x = ev$values, nrow = length(ev$values), ncol =  length(ev$values))
+    # When X ~ N(0, Sigma),  Z = t(Q) %*% X ~ N(0,D)
+    Z <- numeric(0)
+    for (i in 1:nrow(D)){
+      # Z1, Z2, Z3, ... follows N(0, D11), N(0, D22), N(0, D33), ...
+      Z <- rbind(Z, rnorm(N, sd = sqrt(D[i,i])))
+    }
+    #  Z = t(Q) %*% X 
+    #  Q %*% Z = X 
+    # Thus we could transform back to X ~ N(0, Sigma) by left multiply Q
+    X <- Q %*% Z
+    # Since X ~ N(mu, Sigma) is equivalent to mu +  N(0, Sigma), 
+    # We can simply add back the mean vector
+    X <- sweep(X, MARGIN = 1, mu, "+")
+    return(X)
+    }
+
+```
+
+```{r}
+mu <- c(1,2,3)
+sigma <- matrix(c(4,2,1,2,3,2,1,2,3), ncol=3)
+X <-MultiNorm (N=500, mu=mu, sigma=sigma)
+cat("Sample Means: ",rowMeans(X), "\n")
+cat("Sample Covariance Matrix:\n")
+var(t(X))
+```
+
+The sample means and covariance matrix are both very close to the assigned parameters.
+

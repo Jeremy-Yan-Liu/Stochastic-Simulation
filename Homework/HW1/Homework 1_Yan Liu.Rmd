@@ -1,0 +1,261 @@
+---
+title: "Homework 1"
+author: "Yan Liu"
+date: "9/7/2019"
+output: 
+  pdf_document: 
+    latex_engine: xelatex
+---
+
+## 1. Consider the queue model we discussed in class (i.e. a single server model). As we did in class, assume that the interarrival times, Ti are iid as are the service times Si. Assume further that each Ti is exponentially distributed with rate $\lambda$ and each Si is exponentially distributed with rate $\mu$. Let Q(t) be the number of customers waiting in line at time t. Let Wi be the waiting time of the ith individual. Assume that initially the queue is empty,so Q(0) = 0 and W1 = 0.
+
+## (a) Determine P (W2 >= c) for c a positive number. (write down an integral and evaluate it, you won’t need a computer). Note this is a little different than what we did in class when we considered P (W2 = 0).
+
+$$
+w_2 = \left\{\begin{array}{rcl}
+        0  ,&\mbox {if}\ A_2>D_1 \\
+        D_1-A_2, & \mbox{otherwise}
+        \end{array}\right.\\
+where\ A_2 = T_1+T_2\ \ and\ \ D_1 = A_1+S_1 = T_1+S_1\\
+$$
+
+$$
+\begin{aligned}
+P(w_2 \geq c) &= P(0 \geq c \mid A_2-D_1>0) + P(D_1-A_2 \geq c \mid A_2-D_1\leq0) \\
+&= 0 + P(D_1-A_2  \geq c \mid A_2-D_1\leq0)\\
+&= P(D_1-A_2  \geq c \mid A_2-D_1\leq0)\\
+&= P(D_1-A_2  \geq c \mid D_1-A_2\geq0)\\
+&= P(T_1+S_1 - T_1-T_2 \geq c \mid T_1+S_1 - T_1-T_2\geq0)\\
+&= P(S_1 -T_2 \geq c \mid S_1 - T_2\geq0)
+\end{aligned}
+$$
+
+Since $T_i \sim Exp(\lambda), S_i \sim Exp(\mu)$,and $T_i, S_i$ are independent, we have     
+$$
+\begin{aligned}
+&f_T(t) = \lambda e^{-\lambda t}\ for\ t\geq0\\
+&f_S(s) = \mu e^{-\mu s}\ for\ s\geq0 \\
+&\Longrightarrow f_{T,S}(t,s) = \lambda e^{-\lambda t} \cdot \mu e^{-\mu s}\ for\ t,s\geq0\
+\end{aligned}
+$$
+Let $Z_2= S_1-T_2$, we'll find the CDF $F_{Z_2}(z_2)$. Since $w_2 \geq c\  (c > 0)$ occurs only when the next event is arrival, not departure, we may suppose $z_2 \geq 0$, that is $S_1 \geq T_2$. Take the integral, we have:   
+$$
+\begin{aligned}
+P(Z_2\leq z_2) = P(S-T\leq z_2) &= \int_0^\infty\int_0^{t+z_2} \lambda e^{-\lambda t} \cdot \mu e^{-\mu s} dsdt\\
+&= \int_0^\infty (-e^{-\mu s}|_0^{t+z_2})  \lambda e^{-\lambda t} dt\\
+&= \int_0^\infty (1-e^{-\mu (t+z_2)}) \lambda e^{-\lambda t} dt\\
+&= \int_0^\infty \lambda e^{-\lambda t} - \lambda e^{-\lambda t}\cdot e^{-\mu (t+z_2)} dt\\
+&= \int_0^\infty \lambda e^{-\lambda t}- \lambda e^{-\mu z_2}\int_0^\infty e^{-(\lambda+\mu)t}dt\\
+&= (-e^{-\lambda t})|_0^\infty + \frac{\lambda}{\lambda+\mu}\cdot e^{-\mu z_2}\cdot (e^{-(\lambda+\mu)t}|_0^\infty)\\
+&= 1+\frac{\lambda}{\lambda+\mu}\cdot e^{-\mu z_2}\cdot (-1)\\
+&=1-\frac{\lambda}{\lambda+\mu}e^{-\mu z_2} 
+\end{aligned} 
+$$
+Thus, $F_{Z_2}(z_2) = 1-\frac{\lambda}{\lambda+\mu}e^{-\mu z_2}\ ,for\ z_2\geq 0$.    
+Take the differentiate of the CDF $F_{Z_2}(z_2)$, we have the density function $f_{Z_2}(z_2) = \frac{\lambda\mu}{\lambda+\mu}e^{-\mu z_2}$, which would be used in b).    
+Given $c>0$, we can use the CDF above to calculate $P(Z_2\geq c)$, which is equivalent to $P(w_2\geq c)$ as below:   
+$$
+\begin{aligned}
+P(w_2\geq c) &= P(S_1 -T_2 \geq c \mid S_1 - T_2\geq0) \\
+&= P(Z_2 \geq c | Z_2\geq 0) \\
+&=1-P(Z_2\leq c| Z_2\geq 0) \\
+&= 1-(1-\frac{\lambda}{\lambda+\mu}e^{-\mu c})\\
+&= \frac{\lambda}{\lambda+\mu}e^{-\mu c}
+\end{aligned}
+$$
+
+## (b) Write down an integral expression for P(W3 >= c) (You don’t need to evaluate the integral, unless you want to. Your answer may be the sum of two integrals.)
+
+$$
+w_3 = \left\{ \begin{array}{rcl}
+        0  ,&\mbox {if}\ A_3>D_2 \\
+        D_2-A_3, & \mbox{otherwise}
+        \end{array}\right.\\
+where\ A_3 = T_1+T_2+T_3\ \ and \ \ D_2 = A_2+w_2+S_2 =  T_1+T_2 +w_2+S_2 \
+$$
+
+$$
+\begin{aligned}
+P(w_3 \geq c) &= P(0 \geq c \mid A_3-D_2>0) + P(D_2-A_3 \geq c \mid A_3-D_2\leq0) \\
+&= 0 + P(D_2-A_3  \geq c \mid A_3-D_2\leq0)\\
+&= P(D_2-A_3  \geq c \mid A_3-D_2\leq0)\\
+&= P(D_2-A_3  \geq c \mid D_2-A_3\geq0)\\
+&= P(T_1+T_2 +w_2+S_2 - T_1-T_2-T_3 \geq c \mid T_1+T_2 +w_2+S_2 - T_1-T_2-T_3 \geq0)\\
+&= P(w_2+S_2 -T_3 \geq c \mid w_2+S_2 -T_3 \geq0)
+\end{aligned}
+$$
+We know $S_2 \sim Exp(\mu),\ T_3 \sim Exp(\lambda)$.
+Follow the same logic in a), let $Z_3 = S_2-T_3$, easily we have $F_{Z_3}(z_3) = 1-\frac{\lambda}{\lambda+\mu}e^{-\mu z_3}\ ,for\ z_3\geq 0$.
+Take the differentiate of the CDF $F_{Z_3}(z_3)$, we have the density function $f_{Z_3}(z_3) = \frac{\lambda\mu}{\lambda+\mu}e^{-\mu z_3}$.
+From a), we also have when $A_2\leq D_1$, that is when the second person arrives before the first person leaves, $w_2$ has the same distribution as the random variable $Z_2$ defined in a). Thus, $F_{W_2}(w_2) = 1-\frac{\lambda}{\lambda+\mu}e^{-\mu w_2}$.
+
+Furthermore, 
+$$
+\begin{aligned}
+P(w_3 \geq c) &= P(w_2+S_2 -T_3 \geq c \mid w_2+S_2 -T_3 \geq0) \\
+&= P(w_2+Z_3\geq c \mid w_2+Z_3 \geq0)\\
+&= P(0+Z_3\geq c \mid 0+Z_3 \geq0) \cdot P(w_2 = 0) + P(w_2+Z_3\geq c \mid w_2+Z_3 \geq0) \cdot P(w_2>0)\\
+\end{aligned}
+$$
+Since 
+$$
+\begin{aligned}
+P(w_2 = 0) &= P(Z_2=0) = F_{Z_2}(0) = \frac{\mu}{\lambda + \mu}\\
+P(w_2 > 0) &= 1- P(w_2=0) = \frac{\lambda}{\lambda + \mu}
+\end{aligned}
+$$
+
+Thus, 
+$$
+\begin{aligned}
+P(w_3 \geq c) &= P(0+Z_3\geq c \mid 0+Z_3 \geq0) \cdot P(w_2 = 0) + P(w_2+Z_3\geq c \mid w_2+Z_3 \geq0) \cdot P(w_2>0)\\
+&= \frac{\mu}{\lambda+\mu}\cdot P(Z_3\geq c \mid Z_3 \geq0)  + \frac{\lambda}{\lambda+\mu} \cdot P(Z_2+Z_3\geq c \mid Z_2+Z_3 \geq0)\\
+&= \frac{\mu}{\lambda+\mu}\cdot (1-P(Z_3 <c \mid Z_3\geq 0)) + \frac{\lambda}{\lambda+\mu} \cdot
+P(Z_2+Z_3\geq c \mid Z_2+Z_3 \geq0)\\
+&= \frac{\mu}{\lambda+\mu}\cdot (1-F_{Z_3}(c)) + \frac{\lambda}{\lambda+\mu}\cdot P(Z_3\geq c-Z_2 \mid Z_2+Z_3 \geq0)\\
+&= \frac{\mu}{\lambda+\mu}\cdot (1-\int_0^cf_{Z_3}(z_3)dz_3) + \frac{\lambda}{\lambda+\mu}\cdot \int_0^\infty\int_{c-z_2}^\infty f_{z_3}(z_3) f_{z_2}(z_2)dz_3dz_2\\
+& where\ f_{Z_3}(z_3) = \frac{\lambda\mu}{\lambda+\mu}e^{-\mu z_3} \ for\ z_3 \geq 0\\
+& \    \ \  and\ \ f_{Z_2}(z_2) = \frac{\lambda\mu}{\lambda+\mu}e^{-\mu z_2} \ for\ z_2 \geq 0
+\end{aligned}
+$$
+
+## (c) Write a function WaitingTimes(n, $\lambda$, $\mu$) that samples the waiting times of the first n customers. Your function should return a vector of length n with the sampled waiting time. Show the output of your function for n = 10, $\lambda$ = 1, $\mu$ = 1.
+
+```{r}
+WaitingTimes <-  function(n, lambda,mu){
+  # Initialize times array
+  #inter_arrival.times= array()
+  wait.times = array()
+  service.times = array()
+  arrival.times = array()
+  depart.times = array()
+  # First customer
+  inter_arrival.first =  rexp(1,rate = lambda)
+  service.first = rexp(1,rate = mu)
+  wait.first = 0
+  #inter_arrival.times[1] = inter_arrival.first
+  arrival.times[1] = inter_arrival.first
+  wait.times[1] = wait.first
+  service.times[1] = service.first
+  depart.times[1] = arrival.times[1] + wait.times[1] + service.times[1]
+  # Prepare for the next customer
+  arrival.previous = inter_arrival.first
+  depart.previous = inter_arrival.first + wait.first + service.first
+  
+  for (i in 2:n){
+    # Generate random time for the next customer
+    inter_arrival.next = rexp(1,rate = lambda)
+    service.next = rexp(1, rate = mu)
+    arrival.next = arrival.previous + inter_arrival.next
+    wait.next = ifelse(depart.previous <= arrival.next, 0, depart.previous - arrival.next)
+    ## Record current "next" customer into arrays to simulate that he has left
+    ## Update arrival and depart time accordingly
+    # inter_arrival.times[i] = inter_arrival.next
+    arrival.times[i] = arrival.next
+    wait.times[i] = wait.next
+    service.times[i] = service.next
+    depart.times[i] = arrival.next + wait.next + service.next
+    arrival.previous = arrival.times[i]
+    depart.previous = depart.times[i]
+  }
+  return(wait.times)
+}
+```
+
+```{r}
+set.seed(5)
+WaitingTimes(10,1,1)
+```
+
+## (d) Write a function plotQ(t, $\lambda$, $\mu$) that simulates (in other words samples) the queue and plots Q(t) up to a time t. Show a single simulation for t = 20, $\lambda$ = 1, $\mu$ = 1.
+
+After the first arrival, the next event could be an arrival or a departure. 
+From b), we have
+$$
+P(w_2> 0) = \frac{\lambda}{\lambda+\mu}
+$$
+This probability is equivalent to the probability that the next event is arrival.
+To determine whether that event is an arrival or a departure, we generate a random number p between 0 and 1. If $p>\frac{\lambda}{\lambda+\mu}$, then the event is an arrival, otherwise it’s a departure.
+
+```{r}
+plotQ <- function(t,lambda, mu){
+  # Initialization
+  t.elapsed = 0
+  Q_history = 0
+  # Generate first customer
+  T1 = rexp(1,rate=lambda)
+  Q = 1
+  event_times = T1
+  t.elapsed = T1
+  num_event = 1
+  
+  while (t.elapsed < t) {
+  num_event = num_event+1
+  if(Q>0) {
+    # check to make sure queue was not empty
+    T1 = rexp(1,rate=lambda)
+    # roll the dice
+    # generate a random number to determine the type of the next event
+    p = runif(1,0,1)
+    Q_history[num_event] = Q
+    # if arrival, Q increase by 1; if departure, Q decreases by 1
+    Q = ifelse(p<lambda/(lambda+mu),Q+1,Q-1)
+    } else {
+      # here, the queue was empty, so only arrivals are possible
+      T1 = rexp(1,rate=lambda)
+      Q_history[num_event] = Q
+      Q = 1
+      }
+  t.elapsed = t.elapsed+T1
+  event_times[num_event] = T1
+}
+
+plot(cumsum(event_times),Q_history,type="s", 
+     xlab="Time",ylab="Queue length",
+     xlim = c(0,t),
+     main=paste("Queue Simulation (t =",t, ", lambda =",lambda, ", mu =", mu, ")",
+                sep = ""))
+}
+
+```
+
+
+```{r}
+lambda = 1
+mu = 1
+t = 20
+set.seed(12)
+plotQ(t,lambda, mu)
+```
+
+## (e) Using a Monte Carlo approach, estimate P (W2 >= 1). Assume $\lambda$ = 1, $\mu$ = 1. Compare your estimate to the exact answer you derived in part (a). Repeat for P(W100 >= 1), except in this case you won’t have the exact answer.
+
+### Simulate for P(W2 >= 1)
+```{r}
+N <- 20000
+lambda <- 1
+mu <- 1
+w2.simulated.1 = array()
+for (i in 1:N){
+ set.seed(i)
+ w2.simulated.1[i] = WaitingTimes(2,lambda,mu)[2]
+}
+w2.p1 <- sum(w2.simulated.1 >=1)/N
+cat("Simulated P (W2 >= 1) = ", w2.p1)
+```
+
+### Calculated probability in a):      
+$P(w_2 \geq 1) = \frac{\lambda}{\lambda+\mu}e^{-\mu\cdot 1} = \frac{1}{2\cdot e} \approx 0.1839$.
+The simulated probability is close to the theoritical probability.
+
+### Repeat for P(W100 >= 1)
+```{r}
+w2.simulated.100 = array()
+for (i in 1:N){
+ set.seed(i)
+ w2.simulated.100[i] = WaitingTimes(100,lambda,mu)[100]
+}
+w2.p100 <- sum(w2.simulated.100 >=1)/N
+cat("Simulated P (W2 >= 100) = ", w2.p100)
+```
+
