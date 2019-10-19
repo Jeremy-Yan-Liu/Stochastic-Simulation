@@ -8,10 +8,13 @@ output: pdf_document
 ## 1
 ### a)
 ```{r}
+The function below is an implementation of Metropolis-Hasting algorithm for hard-core model on a 100×100 grid, where the value of each grid is either 0 or 1. Among all the possible configurations, we want to sample from configurations that do not violate the hard-core restriction (no neighboring 1’s)
+
 MH_X <- function(Xt){
     i <- sample(100,1)
     j <- sample(100,1)
     w.prop <- Xt
+    # Randomly flip one grid
     w.prop[i,j] <- !w.prop[i,j]
     pass <- hard_core_check(w.prop)
     if (runif(1) < min(1, ifelse(pass, 1, 0))){
